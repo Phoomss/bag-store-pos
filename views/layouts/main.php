@@ -261,8 +261,8 @@
                     </a>
                 <?php endif; ?>
 
-                <div class="nav-header">แคตตาล็อกสินค้า</div>
                 <?php if (\App\Helpers\Session::hasPermission('manage_products')): ?>
+                    <div class="nav-header">แคตตาล็อกสินค้า</div>
                     <a href="/products" class="nav-item-custom <?= str_contains($_SERVER['REQUEST_URI'], '/products') ? 'active' : '' ?>">
                         <i class="fa-solid fa-boxes-stacked"></i> รายการสินค้า
                     </a>

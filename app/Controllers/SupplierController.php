@@ -28,7 +28,7 @@ class SupplierController extends Controller {
     }
 
     public function create(Request $request, Response $response): void {
-        if (!Session::hasPermission('manage_purchases')) {
+        if (!Session::checkRole(['Owner', 'Admin'])) {
             $this->json(['error' => 'Forbidden', 'message' => 'คุณไม่มีสิทธิ์สร้างรายชื่อผู้จัดจำหน่ายใหม่'], 403);
             return;
         }
@@ -54,7 +54,7 @@ class SupplierController extends Controller {
     }
 
     public function update(Request $request, Response $response): void {
-        if (!Session::hasPermission('manage_purchases')) {
+        if (!Session::checkRole(['Owner', 'Admin'])) {
             $this->json(['error' => 'Forbidden', 'message' => 'คุณไม่มีสิทธิ์แก้ไขข้อมูลผู้จัดจำหน่าย'], 403);
             return;
         }
@@ -81,7 +81,7 @@ class SupplierController extends Controller {
     }
 
     public function delete(Request $request, Response $response): void {
-        if (!Session::hasPermission('manage_purchases')) {
+        if (!Session::checkRole(['Owner', 'Admin'])) {
             $this->json(['error' => 'Forbidden', 'message' => 'คุณไม่มีสิทธิ์ลบผู้จัดจำหน่ายออกจากระบบ'], 403);
             return;
         }

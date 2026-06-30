@@ -2,9 +2,11 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="fw-bold m-0"><i class="fa-solid fa-truck-field text-primary me-2"></i> รายชื่อคู่ค้า / ผู้จัดจำหน่าย</h4>
+    <?php if (\App\Helpers\Session::checkRole(['Owner', 'Admin'])): ?>
     <button class="btn btn-primary btn-sm rounded-pill px-3 no-print" data-bs-toggle="modal" data-bs-target="#createModal">
         <i class="fa-solid fa-plus me-1"></i> เพิ่มผู้จัดจำหน่ายใหม่
     </button>
+    <?php endif; ?>
 </div>
 
 <!-- Table Panel -->
@@ -40,6 +42,7 @@
                                 <button class="btn btn-outline-warning btn-xs rounded-pill px-2 ledger-btn" data-id="<?= $sup['id'] ?>">
                                     <i class="fa-solid fa-book"></i> สมุดบัญชี
                                 </button>
+                                <?php if (\App\Helpers\Session::checkRole(['Owner', 'Admin'])): ?>
                                 <button class="btn btn-outline-info btn-xs rounded-pill px-2 edit-btn" 
                                         data-id="<?= $sup['id'] ?>" 
                                         data-name="<?= htmlspecialchars($sup['name']) ?>" 
@@ -52,6 +55,7 @@
                                 <button class="btn btn-outline-danger btn-xs rounded-pill px-2 delete-btn" data-id="<?= $sup['id'] ?>">
                                     <i class="fa-solid fa-trash"></i> ลบ
                                 </button>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>

@@ -236,4 +236,56 @@ class ReportService {
             'totals' => $totals
         ];
     }
+
+    public function getWarehouseDashboardStats(): array {
+        // Total active products count
+        $stmt = $this->db->query("SELECT COUNT(*) FROM products WHERE status = 'Active'");
+        $totalItems = (int)$stmt->fetchColumn();
+
+        // Total active products quantity
+        $stmt = $this->db->query("SELECT COALESCE(SUM(stock_quantity), 0) FROM products WHERE status = 'Active'");
+        $totalQty = (int)$stmt->fetchColumn();
+
+        // Low stock count
+        $stmt = $this->db->query("SELECT COUNT(*) FROM products WHERE stock_quantity <= min_stock AND stock_quantity > 0 AND status = 'Active'");
+        $lowStock = (int)$stmt->fetchColumn();
+
+        // Out of stock count
+        $stmt = $this->db->query("SELECT COUNT(*) FROM products WHERE stock_quantity <= 0 AND status = 'Active'");
+        $outOfStock = (int)$stmt->fetchColumn();
+
+        // Pending purchases count
+        $stmt = $this->db->query("SELECT COUNT(*) FROM purchases WHERE status IN ('Ordered', 'Partial')");
+        $pendingPurchasesCount = (int)$stmt->fetchColumn();
+
+        // Detailed low stock items (LIMIT 5)
+        $stmt = $this->db->query("SELECT id, name, sku, stock_quantity, min_stock FROM products WHERE stock_quantity <= min_stock AND status = 'Active' ORDER BY stock_quantity ASC LIMIT 5");
+        $lowStockProducts = $stmt->fetchAll();
+
+        // Recent manual adjustments (LIMIT 5)
+        $stmt = $this->db->query("SELECT ia.*, p.name as product_name, p.sku, u.name as user_name 
+                                  FROM inventory_adjustments ia
+                                  JOIN products p ON ia.product_id = p.id
+                                  JOIN users u ON ia.user_id = u.id
+                                  ORDER BY ia.id DESC LIMIT 5");
+        $recentAdjustments = $stmt->fetchAll();
+
+        // Recent purchase orders (LIMIT 5)
+        $stmt = $this->db->query("SELECT p.*, s.name as supplier_name 
+                                  FROM purchases p
+                                  JOIN suppliers s ON p.supplier_id = s.id
+                                  ORDER BY p.id DESC LIMIT 5");
+        $recentPurchases = $stmt->fetchAll();
+
+        return [
+            'total_items' => $totalItems,
+            'total_quantity' => $totalQty,
+            'low_stock_count' => $lowStock,
+            'out_of_stock_count' => $outOfStock,
+            'pending_purchases_count' => $pendingPurchasesCount,
+            'low_stock_products' => $lowStockProducts,
+            'recent_adjustments' => $recentAdjustments,
+            'recent_purchases' => $recentPurchases
+        ];
+    }
 }
