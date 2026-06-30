@@ -1,0 +1,160 @@
+/* Bag Store POS Light & Modern Custom Style Overrides */
+
+/* Fade-in for page transitions */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.glass-panel {
+    animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03) !important;
+    color: var(--text-main) !important;
+}
+
+/* Micro-animations for buttons & icons */
+.btn, .nav-item-custom, .product-card-custom, .pay-mode-btn {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card-custom {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02) !important;
+}
+
+.product-card-custom:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+    border-color: var(--accent-color) !important;
+}
+
+/* Soft light mode scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Custom DataTables headers and styles for light mode */
+table.dataTable thead th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.page-link {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+}
+
+.page-item.active .page-link {
+    background-color: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    color: #ffffff !important;
+}
+
+/* SweetAlert2 Popup Overrides for Light Mode */
+.swal2-popup {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 20px !important;
+}
+.swal2-title {
+    color: #0f172a !important;
+}
+.swal2-html-container {
+    color: #475569 !important;
+}
+
+/* ==========================================
+   GLOBAL TEXT CONTRAST OVERRIDES FOR LIGHT THEME
+   ========================================== */
+
+/* Overrides Bootstrap .text-light to render dark text in light mode */
+.text-light {
+    color: var(--text-main) !important;
+}
+
+/* Overrides table rows and headings that had hardcoded white classes */
+.table.text-light, 
+table.dataTable tr.text-light,
+.text-light-override,
+tr.text-light td {
+    color: var(--text-main) !important;
+}
+
+/* Override border-secondary to use the subtle light border */
+.border-secondary {
+    border-color: var(--border-color) !important;
+}
+
+/* Ensure the main titles and labels are legible */
+h1, h2, h3, h4, h5, h6, th, td, label {
+    color: var(--text-main);
+}
+.text-secondary {
+    color: var(--text-muted) !important;
+}
+.bg-secondary {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-main) !important;
+}
+.dropdown-item:hover {
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* ==========================================
+   RESPONSIVE LAYOUT & GENERAL OVERRIDES
+   ========================================== */
+
+/* Glass card padding and radius for small mobile screens */
+@media (max-width: 575.98px) {
+    .glass-card {
+        padding: 24px 16px !important;
+        margin: 16px !important;
+        border-radius: 18px !important;
+    }
+}
+
+/* Convert vertical borders to horizontal division lines when grid columns wrap to full-width on smaller screens */
+@media (max-width: 991.98px) {
+    .row > [class*="col-"].border-start {
+        border-left: none !important;
+        border-top: 1px solid var(--border-color) !important;
+        padding-top: 24px;
+        margin-top: 24px;
+        padding-left: calc(var(--bs-gutter-x) * .5) !important;
+    }
+    .row > [class*="col-lg-"].border-end {
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding-bottom: 24px;
+        margin-bottom: 24px;
+        padding-right: calc(var(--bs-gutter-x) * .5) !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .row > [class*="col-md-"].border-end {
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding-bottom: 24px;
+        margin-bottom: 24px;
+        padding-right: calc(var(--bs-gutter-x) * .5) !important;
+    }
+}

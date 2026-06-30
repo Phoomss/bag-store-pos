@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: bag-pos-app
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    depends_on:
+      - db
+    networks:
+      - pos-network
+
+  db:
+    image: mysql:8.0
+    container_name: bag-pos-db
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: bag_pos
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - pos-network
+
+volumes:
+  db-data:
+
+networks:
+  pos-network:
+    driver: bridge
