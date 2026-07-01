@@ -5,7 +5,7 @@
     <span class="text-secondary small">แก้ไขการกำหนดค่าต่างๆ ทั่วทั้งระบบ</span>
 </div>
 
-<form id="settingsForm">
+<form id="settingsForm" enctype="multipart/form-data">
     <div class="row">
         <!-- Left: Store Information -->
         <div class="col-lg-6 mb-4">
@@ -58,6 +58,28 @@
                 </div>
             </div>
 
+            <!-- PromptPay Settings Card -->
+            <div class="glass-panel mb-4">
+                <h5 class="fw-bold mb-4 text-success"><i class="fa-solid fa-qrcode me-2"></i> ตั้งค่าการชำระเงินด้วย PromptPay QR</h5>
+                <div class="mb-3">
+                    <label for="promptpay_number" class="form-label">หมายเลขพร้อมเพย์ (PromptPay ID / เบอร์โทรศัพท์ / เลขบัตรประชาชน)</label>
+                    <input type="text" class="form-control" id="promptpay_number" name="promptpay_number" value="<?= htmlspecialchars($settings['promptpay_number'] ?? '') ?>" placeholder="เช่น 0812345678 หรือ 1100200030000">
+                </div>
+                <div class="mb-3">
+                    <label for="promptpay_qr" class="form-label">อัปโหลดรูปภาพ QR Code พร้อมเพย์</label>
+                    <input type="file" class="form-control" id="promptpay_qr" name="promptpay_qr" accept="image/*">
+                    <p class="text-secondary small mt-1">อัปโหลดรูปภาพ QR Code ของพร้อมเพย์ร้านค้าเพื่อแสดงบนหน้าจอ POS เมื่อลูกค้าต้องการชำระเงินผ่านการโอนเงิน</p>
+                </div>
+                <?php if (!empty($settings['promptpay_qr_path'])): ?>
+                    <div class="mb-3">
+                        <label class="form-label d-block text-secondary small fw-semibold">รูปภาพ QR Code พร้อมเพย์ปัจจุบัน:</label>
+                        <div class="p-2 bg-white d-inline-block rounded-3 border">
+                            <img src="<?= htmlspecialchars($settings['promptpay_qr_path']) ?>" alt="PromptPay QR Code" style="max-width: 150px; height: auto;">
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <div class="glass-panel">
                 <h5 class="fw-bold mb-4 text-info"><i class="fa-solid fa-envelope-open-text me-2"></i> ตั้งค่าการส่งอีเมล (SMTP Server)</h5>
                 <div class="row mb-3">
@@ -105,16 +127,13 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const data = {};
         const formData = new FormData(form);
-        formData.forEach((val, key) => { data[key] = val; });
 
         $('#saveSettingsBtn').prop('disabled', true).text('กำลังบันทึก...');
 
         fetch('/settings/update', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: formData
         })
         .then(res => {
             if (!res.ok) return res.json().then(err => { throw new Error(err.message); });

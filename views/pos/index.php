@@ -322,13 +322,28 @@
                             </div>
                         </div>
 
-                        <!-- PromptPay QR dummy visualization -->
+                        <!-- PromptPay QR visualization -->
                         <div class="text-center d-none" id="checkoutQrContainer">
                             <p class="text-secondary small mb-3">สแกนคิวอาร์โค้ดนี้ด้วยแอปธนาคารเพื่อชำระเงิน</p>
                             <div class="p-3 bg-white d-inline-block rounded-4 mb-3 shadow-sm border">
-                                <!-- Mock generated QR code -->
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://promptpay.io/0812345678" alt="Mock PromptPay QR" style="width: 180px; height: 180px;">
+                                <?php if (!empty($settings['promptpay_qr_path'])): ?>
+                                    <!-- User uploaded QR code -->
+                                    <img src="<?= htmlspecialchars($settings['promptpay_qr_path']) ?>" alt="PromptPay QR" style="width: 180px; height: 180px; object-fit: contain;">
+                                <?php elseif (!empty($settings['promptpay_number'])): ?>
+                                    <!-- Dynamic QR using promptpay_number -->
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://promptpay.io/<?= htmlspecialchars($settings['promptpay_number']) ?>" alt="PromptPay QR (Auto)" style="width: 180px; height: 180px; object-fit: contain;">
+                                <?php else: ?>
+                                    <!-- No settings found warning -->
+                                    <div class="d-flex flex-column align-items-center justify-content-center border border-dashed rounded-3 p-3 text-danger" style="width: 180px; height: 180px; border-color: #ef4444 !important;">
+                                        <i class="fa-solid fa-triangle-exclamation fa-2x mb-2 text-danger"></i>
+                                        <span class="small fw-bold text-danger text-center">ไม่ได้ตั้งค่าพร้อมเพย์</span>
+                                        <span class="text-secondary text-center" style="font-size: 10px;">ตั้งค่าได้ที่ระบบร้านค้า</span>
+                                    </div>
+                                <?php endif; ?>
                             </div>
+                            <?php if (!empty($settings['promptpay_number'])): ?>
+                                <p class="text-secondary small mb-2 fw-semibold">PromptPay ID: <span class="text-dark fw-bold"><?= htmlspecialchars($settings['promptpay_number']) ?></span></p>
+                            <?php endif; ?>
                             <div class="mb-3">
                                 <label for="checkoutQrRef" class="form-label small text-secondary fw-semibold">หมายเลขอ้างอิงสลิปโอนเงิน</label>
                                 <input type="text" class="form-control text-center" id="checkoutQrRef" placeholder="กรอกเลข Transaction ID...">

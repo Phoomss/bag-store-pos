@@ -36,10 +36,33 @@ class SettingsController extends Controller {
 
         $body = $request->getBody();
 
+        // Handle PromptPay QR Image upload
+        $file = $request->file('promptpay_qr');
+        if ($file && $file['error'] === UPLOAD_ERR_OK) {
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'svg'];
+            if (!in_array(strtolower($ext), $allowed)) {
+                $this->json(['error' => 'Validation Error', 'message' => 'Only image files are allowed.'], 400);
+                return;
+            }
+
+            $uploadDir = dirname(__DIR__, 2) . '/public/uploads/settings/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            $filename = 'promptpay_qr_' . time() . '.' . $ext;
+            if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+                $body['promptpay_qr_path'] = '/uploads/settings/' . $filename;
+            } else {
+                $this->json(['error' => 'Server Error', 'message' => 'Failed to move uploaded file.'], 500);
+                return;
+            }
+        }
+
         try {
             $success = $this->settingsService->updateSettings($body);
             if ($success) {
-                // Update environment configurations if needed, or simply return success
                 $this->json(['success' => true, 'message' => 'System settings updated successfully.']);
             } else {
                 $this->json(['error' => 'Server Error', 'message' => 'Failed to save settings.'], 500);
