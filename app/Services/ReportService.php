@@ -288,4 +288,57 @@ class ReportService {
             'recent_purchases' => $recentPurchases
         ];
     }
+
+    public function getCashierDashboardStats(int $userId): array {
+        // Today's Sales count by this cashier
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ? AND DATE(created_at) = CURDATE() AND status = 'Completed'");
+        $stmt->execute([$userId]);
+        $todaySalesCount = (int)$stmt->fetchColumn();
+
+        // Today's Total Sales amount by this cashier
+        $stmt = $this->db->prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM sales WHERE user_id = ? AND DATE(created_at) = CURDATE() AND status = 'Completed'");
+        $stmt->execute([$userId]);
+        $todaySalesAmount = (float)$stmt->fetchColumn();
+
+        // Active Held (suspended) Sales count by this cashier
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ? AND status = 'Held'");
+        $stmt->execute([$userId]);
+        $heldSalesCount = (int)$stmt->fetchColumn();
+
+        // Today's Payment breakdown for this cashier
+        $stmt = $this->db->prepare("SELECT payment_method, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as total 
+                                    FROM sales 
+                                    WHERE user_id = ? AND DATE(created_at) = CURDATE() AND status = 'Completed' 
+                                    GROUP BY payment_method");
+        $stmt->execute([$userId]);
+        $paymentBreakdown = $stmt->fetchAll();
+
+        // Recent Sales (Completed) by this cashier (Limit 5)
+        $stmt = $this->db->prepare("SELECT s.*, c.name as customer_name 
+                                    FROM sales s 
+                                    LEFT JOIN customers c ON s.customer_id = c.id 
+                                    WHERE s.user_id = ? AND s.status = 'Completed' 
+                                    ORDER BY s.id DESC 
+                                    LIMIT 5");
+        $stmt->execute([$userId]);
+        $recentSales = $stmt->fetchAll();
+
+        // Active Held Sales details by this cashier (so they can resume/manage them)
+        $stmt = $this->db->prepare("SELECT s.*, c.name as customer_name 
+                                    FROM sales s 
+                                    LEFT JOIN customers c ON s.customer_id = c.id 
+                                    WHERE s.user_id = ? AND s.status = 'Held' 
+                                    ORDER BY s.id DESC");
+        $stmt->execute([$userId]);
+        $heldSales = $stmt->fetchAll();
+
+        return [
+            'today_sales_count' => $todaySalesCount,
+            'today_sales_amount' => $todaySalesAmount,
+            'held_sales_count' => $heldSalesCount,
+            'payment_breakdown' => $paymentBreakdown,
+            'recent_sales' => $recentSales,
+            'held_sales' => $heldSales
+        ];
+    }
 }

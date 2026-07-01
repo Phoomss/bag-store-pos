@@ -16,8 +16,11 @@ class DashboardController extends Controller {
     }
 
     public function index(Request $request, Response $response): void {
-        // Redirect to warehouse dashboard if they only have warehouse-related permissions
-        if (!Session::hasPermission('manage_sales') && !Session::hasPermission('view_reports')) {
+        $role = Session::get('user_role');
+        if ($role === 'Cashier') {
+            $stats = $this->reportService->getCashierDashboardStats((int)Session::get('user_id'));
+            $this->view('dashboard/cashier', ['stats' => $stats]);
+        } else if (!Session::hasPermission('manage_sales') && !Session::hasPermission('view_reports')) {
             $stats = $this->reportService->getWarehouseDashboardStats();
             $this->view('dashboard/warehouse', ['stats' => $stats]);
         } else {

@@ -500,6 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Render Product Cards Grid
     function renderProductCards() {
         const container = document.getElementById('posProductsContainer');
+        if (!container) return;
         container.innerHTML = '';
 
         let query = document.getElementById('posSearchInput').value.toLowerCase();
@@ -518,11 +519,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const price = p.promotion_price ? p.promotion_price : p.selling_price;
             const hasPromo = p.promotion_price ? true : false;
             
-            let stockBadge = `<span class="badge bg-success small w-100 py-2 mt-auto" style="border-radius: 8px;">มีสินค้า (${p.stock_quantity})</span>`;
-            if (p.stock_quantity <= 0) {
+            // Calculate actual available quantity to show (stock_quantity minus quantity currently in cart)
+            const inCart = cart.find(item => item.product_id === p.id);
+            const cartQty = inCart ? inCart.quantity : 0;
+            const displayStock = Math.max(0, p.stock_quantity - cartQty);
+            
+            let stockBadge = `<span class="badge bg-success small w-100 py-2 mt-auto" style="border-radius: 8px;">มีสินค้า (${displayStock})</span>`;
+            if (displayStock <= 0) {
                 stockBadge = `<span class="badge bg-danger small w-100 py-2 mt-auto" style="border-radius: 8px;">สินค้าหมด</span>`;
-            } else if (p.stock_quantity <= p.min_stock) {
-                stockBadge = `<span class="badge bg-warning text-dark small w-100 py-2 mt-auto" style="border-radius: 8px;">สต็อกเหลือน้อย (${p.stock_quantity})</span>`;
+            } else if (displayStock <= p.min_stock) {
+                stockBadge = `<span class="badge bg-warning text-dark small w-100 py-2 mt-auto" style="border-radius: 8px;">สต็อกเหลือน้อย (${displayStock})</span>`;
             }
 
             const card = document.createElement('div');
@@ -554,11 +560,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Add click listener
             card.querySelector('.pos-product-card').addEventListener('click', function() {
-                if (p.stock_quantity <= 0) {
+                if (displayStock <= 0) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'สินค้าหมดคลัง',
-                        text: 'สินค้ารายการนี้ไม่มีสต็อกเหลืออยู่.',
+                        text: 'ไม่สามารถเลือกเพิ่มได้เนื่องจากสต็อกในระบบถูกเลือกไปหมดแล้ว.',
                         background: '#ffffff',
                         color: '#0f172a',
                         confirmButtonColor: '#3b82f6'
@@ -595,6 +601,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add product to Cart
     function addToCart(p) {
+        if (p.stock_quantity <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'สินค้าหมดคลัง',
+                text: `ไม่สามารถเพิ่มสินค้า '${p.name}' ได้เนื่องจากไม่มีสต็อกเหลืออยู่ในระบบ.`,
+                background: '#ffffff',
+                color: '#0f172a',
+                confirmButtonColor: '#3b82f6'
+            });
+            return;
+        }
+
         const price = p.promotion_price ? parseFloat(p.promotion_price) : parseFloat(p.selling_price);
         const existing = cart.find(item => item.product_id === p.id);
 
@@ -652,6 +670,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
             calculateCartTotals();
+            renderProductCards();
             return;
         }
 
@@ -707,6 +726,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         calculateCartTotals();
+        renderProductCards();
     }
 
     // Points redemption logic
@@ -974,16 +994,34 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => res.json())
         .then(data => {
             if (data.success && data.sale) {
-                cart = data.sale.items.map(item => ({
-                    product_id: item.product_id,
-                    name: item.product_name,
-                    sku: item.sku,
-                    barcode: item.barcode,
-                    price: parseFloat(item.selling_price),
-                    quantity: item.quantity,
-                    subtotal: parseFloat(item.subtotal),
-                    catalog_stock: productsCatalog.find(p => p.id == item.product_id).stock_quantity
-                }));
+                let stockAdjusted = false;
+                let adjustedItems = [];
+                
+                cart = [];
+                data.sale.items.forEach(item => {
+                    const prod = productsCatalog.find(p => p.id == item.product_id);
+                    const catalogStock = prod ? prod.stock_quantity : 0;
+                    let qty = item.quantity;
+                    
+                    if (qty > catalogStock) {
+                        stockAdjusted = true;
+                        qty = catalogStock;
+                        adjustedItems.push(item.product_name);
+                    }
+                    
+                    if (qty > 0) {
+                        cart.push({
+                            product_id: item.product_id,
+                            name: item.product_name,
+                            sku: item.sku,
+                            barcode: item.barcode,
+                            price: parseFloat(item.selling_price),
+                            quantity: qty,
+                            subtotal: qty * parseFloat(item.selling_price),
+                            catalog_stock: catalogStock
+                        });
+                    }
+                });
                 
                 if (data.sale.customer_id) {
                     $('#posCustomerSelect').val(data.sale.customer_id).trigger('change');
@@ -991,8 +1029,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 $('#heldSalesModal').modal('hide');
                 renderCart();
+                
+                if (stockAdjusted) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ปรับปรุงจำนวนสินค้าตามคลังจริง',
+                        text: `สินค้าดังต่อไปนี้มีสต็อกคงเหลือไม่เพียงพอ และระบบได้ปรับลดจำนวนหรือนำออกจากรายการแล้ว: ${adjustedItems.join(', ')}`,
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        confirmButtonColor: '#3b82f6'
+                    });
+                }
             }
         });
+    }
+
+    // Check if there is a held_id to resume from URL query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const resumeId = urlParams.get('resume');
+    if (resumeId) {
+        resumeHeldSale(parseInt(resumeId));
+        // Clean query params in browser history
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
 });
 </script>
